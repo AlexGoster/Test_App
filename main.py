@@ -9,14 +9,14 @@ class CalculatorApp:
         self.root.geometry("500x200")
         self.root.resizable(False, False)
 
-        # Поля ввода для чисел
+       
         self.entry1 = tk.Entry(root, width=10, font=("Arial", 14), justify="center")
         self.entry1.grid(row=0, column=0, padx=10, pady=20)
 
         self.entry2 = tk.Entry(root, width=10, font=("Arial", 14), justify="center")
         self.entry2.grid(row=0, column=2, padx=10, pady=20)
 
-        # Кнопки операций (между полями)
+        
         operations = [
             ("+", self.add),
             ("-", self.sub),
@@ -28,15 +28,15 @@ class CalculatorApp:
             btn = tk.Button(root, text=text, width=4, height=2,
                             font=("Arial", 12), command=command)
             btn.grid(row=0, column=1, rowspan=2, padx=2, pady=2,
-                     sticky="ns" if i % 2 == 0 else "ew")  # размещаем в ряд по два
+                     sticky="ns" if i % 2 == 0 else "ew")
 
-        # Поле для вывода результата (справа)
+        
         self.result_label = tk.Label(root, text="Результат", font=("Arial", 14),
                                      relief="sunken", width=15, anchor="e",
                                      bg="white")
         self.result_label.grid(row=0, column=3, rowspan=2, padx=20, pady=10, sticky="nsew")
 
-        # Настройка весов столбцов для растягивания
+        
         root.grid_columnconfigure(0, weight=1)
         root.grid_columnconfigure(1, weight=0)
         root.grid_columnconfigure(2, weight=1)
@@ -55,7 +55,7 @@ class CalculatorApp:
     def show_result(self, result):
         """Отображает результат в поле, округляя до 6 знаков."""
         if result is not None:
-            # Если результат целое число, показываем без десятичной части
+           
             if result == int(result):
                 self.result_label.config(text=str(int(result)))
             else:
