@@ -1,93 +1,116 @@
-
 import tkinter as tk
 from tkinter import messagebox
 
-class CalculatorApp:
+class Calculator:
     def __init__(self, root):
         self.root = root
         self.root.title("Калькулятор")
-        self.root.geometry("500x200")
+        self.root.geometry("400x500")
         self.root.resizable(False, False)
 
-       
-        self.entry1 = tk.Entry(root, width=10, font=("Arial", 14), justify="center")
-        self.entry1.grid(row=0, column=0, padx=10, pady=20)
+        self.expression = ""
+        self.input_var = tk.StringVar()
 
-        self.entry2 = tk.Entry(root, width=10, font=("Arial", 14), justify="center")
-        self.entry2.grid(row=0, column=2, padx=10, pady=20)
+        self.display = tk.Entry(root, textvariable=self.input_var, font=("Arial", 20),
+                                justify="right", bd=10, relief="ridge", state="readonly")
+        self.display.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
-        
-        operations = [
-            ("+", self.add),
-            ("-", self.sub),
-            (":", self.div),
-            ("*", self.mul)
+        buttons = [
+            ('C', 1, 0), ('⌫', 1, 1), ('%', 1, 2), ('÷', 1, 3),
+            ('7', 2, 0), ('8', 2, 1), ('9', 2, 2), ('×', 2, 3),
+            ('4', 3, 0), ('5', 3, 1), ('6', 3, 2), ('−', 3, 3),
+            ('1', 4, 0), ('2', 4, 1), ('3', 4, 2), ('+', 4, 3),
+            ('±', 5, 0), ('0', 5, 1), ('.', 5, 2), ('=', 5, 3),
         ]
 
-        for i, (text, command) in enumerate(operations):
-            btn = tk.Button(root, text=text, width=4, height=2,
-                            font=("Arial", 12), command=command)
-            btn.grid(row=0, column=1, rowspan=2, padx=2, pady=2,
-                     sticky="ns" if i % 2 == 0 else "ew")
-
-        
-        self.result_label = tk.Label(root, text="Результат", font=("Arial", 14),
-                                     relief="sunken", width=15, anchor="e",
-                                     bg="white")
-        self.result_label.grid(row=0, column=3, rowspan=2, padx=20, pady=10, sticky="nsew")
-
-        
-        root.grid_columnconfigure(0, weight=1)
-        root.grid_columnconfigure(1, weight=0)
-        root.grid_columnconfigure(2, weight=1)
-        root.grid_columnconfigure(3, weight=1)
-
-    def get_numbers(self):
-        """Считывает числа из полей ввода, возвращает (num1, num2) или вызывает ошибку."""
-        try:
-            num1 = float(self.entry1.get().replace(',', '.'))
-            num2 = float(self.entry2.get().replace(',', '.'))
-            return num1, num2
-        except ValueError:
-            messagebox.showerror("Ошибка", "Введите корректные числа!")
-            return None, None
-
-    def show_result(self, result):
-        """Отображает результат в поле, округляя до 6 знаков."""
-        if result is not None:
-           
-            if result == int(result):
-                self.result_label.config(text=str(int(result)))
+        for (text, row, col) in buttons:
+            if text in ('C', '⌫'):
+                bg, fg = '#f44336', 'white'
+            elif text in ('+', '−', '×', '÷', '='):
+                bg, fg = '#ff9800', 'white'
+            elif text in ('%', '±'):
+                bg, fg = '#607d8b', 'white'
             else:
-                self.result_label.config(text=f"{result:.6f}".rstrip('0').rstrip('.'))
+                bg, fg = '#e0e0e0', 'black'
+
+            btn = tk.Button(root, text=text, font=("Arial", 16), bg=bg, fg=fg,
+                            command=lambda t=text: self.on_button_click(t))
+            btn.grid(row=row, column=col, padx=2, pady=2, sticky="nsew")
+
+        for i in range(4):
+            root.grid_columnconfigure(i, weight=1)
+        for i in range(1, 6):
+            root.grid_rowconfigure(i, weight=1)
+
+        root.bind('<Key>', self.on_key_press)
+
+    def on_button_click(self, value):
+        if value == 'C':
+            self.clear()
+        elif value == '⌫':
+            self.backspace()
+        elif value == '=':
+            self.calculate()
+        elif value == '±':
+            self.negate()
         else:
-            self.result_label.config(text="Ошибка")
+            self.expression += value
+            self.update_display()
 
-    def add(self):
-        a, b = self.get_numbers()
-        if a is not None:
-            self.show_result(a + b)
+    def on_key_press(self, event):
+        key = event.char
+        if key.isdigit() or key in '+-*/%.()':
+            self.expression += key
+            self.update_display()
+        elif key == '\r' or key == '=':
+            self.calculate()
+        elif key == '\x08':
+            self.backspace()
+        elif key == '\x1b' or key.lower() == 'c':
+            self.clear()
 
-    def sub(self):
-        a, b = self.get_numbers()
-        if a is not None:
-            self.show_result(a - b)
+    def update_display(self):
+        self.input_var.set(self.expression)
 
-    def mul(self):
-        a, b = self.get_numbers()
-        if a is not None:
-            self.show_result(a * b)
+    def clear(self):
+        self.expression = ""
+        self.update_display()
 
-    def div(self):
-        a, b = self.get_numbers()
-        if a is not None:
-            if b == 0:
-                messagebox.showerror("Ошибка", "Деление на ноль невозможно!")
-                self.result_label.config(text="Ошибка")
-            else:
-                self.show_result(a / b)
+    def backspace(self):
+        self.expression = self.expression[:-1]
+        self.update_display()
+
+    def negate(self):
+        if self.expression:
+            try:
+                val = float(self.expression)
+                if val > 0:
+                    self.expression = '-' + self.expression
+                else:
+                    self.expression = self.expression[1:]
+                self.update_display()
+            except ValueError:
+                pass
+
+    def calculate(self):
+        try:
+            expr = self.expression.replace('×', '*').replace('÷', '/').replace('−', '-')
+            allowed = set('0123456789+-*/().% ')
+            if not all(c in allowed for c in expr):
+                raise ValueError
+            result = eval(expr)
+            if isinstance(result, float) and result.is_integer():
+                result = int(result)
+            self.expression = str(result)
+            self.update_display()
+        except ZeroDivisionError:
+            messagebox.showerror("Ошибка", "Деление на ноль!")
+            self.clear()
+        except Exception:
+            messagebox.showerror("Ошибка", "Некорректное выражение")
+            self.clear()
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = CalculatorApp(root)
+    app = Calculator(root)
     root.mainloop()
