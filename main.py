@@ -9,7 +9,7 @@ class Calculator:
         self.root.resizable(False, False)
 
         self.expression = ""
-        self.input_var = tk.StringVar()
+        self.input_var = tk.StringVar(master=root)
 
         self.display = tk.Entry(root, textvariable=self.input_var, font=("Arial", 20),
                                 justify="right", bd=10, relief="ridge", state="readonly")
@@ -84,6 +84,10 @@ class Calculator:
         if self.expression:
             try:
                 val = float(self.expression)
+                if val == 0:
+                    self.expression = "0"
+                    self.update_display()
+                    return
                 if val > 0:
                     self.expression = '-' + self.expression
                 else:
@@ -95,10 +99,10 @@ class Calculator:
     def calculate(self):
         try:
             expr = self.expression.replace('×', '*').replace('÷', '/').replace('−', '-')
-            allowed = set('0123456789+-*/().% ')
+            allowed = set('0123456789eE+-*/().% ')
             if not all(c in allowed for c in expr):
                 raise ValueError
-            result = eval(expr)
+            result = eval(expr, {"__builtins__": {}}, {})
             if isinstance(result, float) and result.is_integer():
                 result = int(result)
             self.expression = str(result)
